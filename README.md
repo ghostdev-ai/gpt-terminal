@@ -1,4 +1,4 @@
-# termgpt
+# GPT - Terminal
 
 ```bash
 pip3 install -r requirements.txt
