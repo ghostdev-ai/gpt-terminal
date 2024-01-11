@@ -1,6 +1,6 @@
-# GPT - Terminal
+# GPT-Terminal
 
-GPT-Terminal, a large language model with prompt engineering to perform tasks over the terminal from simple bash commands to code generation.
+GPT-Terminal, a large language model prompt engineered to perform tasks over the terminal from simple bash commands to code generation.
 
 ## Install
 ```bash
@@ -8,7 +8,7 @@ pip3 install -r requirements.txt
 ```
 
 ## Usage
-GPT - Terminal can execute terminal commands as well as python code based on a prompt. For example, let's ask it to list all the files in the current directory:
+GPT-Terminal can execute terminal commands as well as python code based on a prompt. For example, let's ask it to list all the files in the current directory:
 
 ```bash
 $ python3 src/main.py

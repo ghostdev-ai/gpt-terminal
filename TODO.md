@@ -15,3 +15,9 @@ Parse Arguments
         --swe or --engineer, instantiate with software engineer role
         --w or --web, instantiates with web QA role
         --chat, chatgpt role    
+
+
+Resources:
+https://github.com/TheR1D/shell_gpt
+https://github.com/jucasoliveira/terminalGPT
+https://github.com/tcapelle/termGPT/blob/main/README.md
