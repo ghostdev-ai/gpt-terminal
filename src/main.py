@@ -1,5 +1,5 @@
 from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from prompts import terminal_role, code_assistant_role
 from dotenv import load_dotenv
 from colorama import Fore, Style
@@ -48,22 +48,41 @@ while (query := input(Fore.GREEN + Style.BRIGHT + "> " + Style.RESET_ALL)) not i
     # response = llm.invoke(messages)
     # response = llm.invoke({"input": "What is the current directory?"})
     # print(response.content)
-
+    
     # `shell=True` argument allows you to run the command in a shell
     # `capture_output=True` captures the command's output
     # `text=True` argument is used to return the output as a string    
-    command = response.content
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    # command = response.content
+    if not args.code:
+        command = response.content
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
 
-    if result.returncode == 0:
-        print(result.stdout)
+        if result.returncode == 0:
+            print(result.stdout)
+        else:
+            print(Fore.RED + Style.BRIGHT + result.stderr + Style.RESET_ALL)
+
+        # verbose:
+        #   Print the output of the command
+        #   print("Output:", result.stdout)
+        #   Print the error (if any)
+        #   print("Error:", result.stderr)
+        #   Print the return code
+        #   print("Return Code:", result.returncode)
+    
     else:
-        print(Fore.RED + Style.BRIGHT + result.stderr + Style.RESET_ALL)
+        python_code = response.content
 
-    # verbose:
-    #   Print the output of the command
-    #   print("Output:", result.stdout)
-    #   Print the error (if any)
-    #   print("Error:", result.stderr)
-    #   Print the return code
-    #   print("Return Code:", result.returncode)
+        template = """
+        Generate a python file name that best illustrates the following code:
+        {code}
+        """
+        prompt = PromptTemplate.from_template(template).format(code=python_code)
+        
+        llm = ChatOpenAI(openai_api_key=openai_api_key)
+        response = llm.invoke(prompt)
+        
+        file_name = response.content
+        with open(file_name, "w") as file:
+            file.write(python_code)
+        print(f"Python code written to {file_name}")
