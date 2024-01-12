@@ -13,7 +13,7 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--file", action="append")
+    parser.add_argument("-f", "--file", type=str, default=None)
     parser.add_argument("-c", "--code", action="store_true")
     # parser.add_argument("-c", "--code", action="store_const", const=code_assistant_role, default=terminal_role)
     return parser.parse_args()
@@ -36,12 +36,17 @@ def init_model(template):
 
 args = parse_args()
 
+prompt = None
+if args.file:
+    with open(args.file, 'r') as file:
+        prompt = file.read()
+
 term_chain = init_model(terminal_role)
 code_chain = init_model(code_assistant_role)
 chain = term_chain if not args.code else code_chain
 
 exit_commands = {"exit", "quit", "q", "bye", "goodbye", "stop", "end", "finish", "done"}
-while (query := input(Fore.GREEN + Style.BRIGHT + "> " + Style.RESET_ALL)) not in exit_commands:
+while (query := (input(Fore.GREEN + Style.BRIGHT + "> " + Style.RESET_ALL) if not prompt else prompt )) not in exit_commands:
     response = chain.invoke({"input": query})
     print(Fore.CYAN + Style.BRIGHT + response.content + Style.RESET_ALL)
 
@@ -85,4 +90,5 @@ while (query := input(Fore.GREEN + Style.BRIGHT + "> " + Style.RESET_ALL)) not i
         file_name = response.content
         with open(file_name, "w") as file:
             file.write(python_code)
-        print(f"Python code written to {file_name}")
+    
+    prompt = None
