@@ -36,7 +36,7 @@ def init_model(template):
 
 args = parse_args()
 
-prompt = None
+prompt = Nonegit 
 if args.file:
     with open(args.file, 'r') as file:
         prompt = file.read()
