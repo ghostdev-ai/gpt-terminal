@@ -1,8 +1,5 @@
 from langchain_openai import ChatOpenAI
-from langchain.chains import ConversationChain
-from langchain.memory import ConversationBufferMemory
-
-from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 from prompts import terminal_role, code_assistant_role
 from dotenv import load_dotenv
 from colorama import Fore, Style
@@ -10,8 +7,8 @@ import os
 import subprocess
 import argparse
 
-load_dotenv()
 
+load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
 
@@ -53,21 +50,24 @@ def run_subprocess(terminal_command):
         print(Fore.RED + Style.BRIGHT + result.stderr + Style.RESET_ALL)
 
 
-args = parse_args()
+def main():
+    args = parse_args()
 
-term_chain = init_model(terminal_role)
-code_chain = init_model(code_assistant_role)
-chain = term_chain if not args.code else code_chain
+    term_chain = init_model(terminal_role)
+    code_chain = init_model(code_assistant_role)
+    chain = term_chain if not args.code else code_chain
 
-exit_commands = {"exit", "quit", "q", "bye", "goodbye", "stop", "end", "finish", "done"}
-while (query := input(Fore.GREEN + Style.BRIGHT + "> " + Style.RESET_ALL)) not in exit_commands:
-    # response = llm.invoke(messages)
-    # response = llm.invoke({"input": "What is the current directory?"})
-    # print(response.content)
-    response = chain.invoke({"input": query})
-    print(Fore.CYAN + Style.BRIGHT + response.content + Style.RESET_ALL)
-    
-    if not args.code:
-        run_subprocess(response.content)
-    else:
-        pass
+    exit_commands = {"exit", "quit", "q", "bye", "goodbye", "stop", "end", "finish", "done"}
+    while (query := input(Fore.GREEN + Style.BRIGHT + "> " + Style.RESET_ALL)) not in exit_commands:
+        # response = llm.invoke(messages)
+        # response = llm.invoke({"input": "What is the current directory?"})
+        # print(response.content)
+        response = chain.invoke({"input": query})
+        print(Fore.CYAN + Style.BRIGHT + response.content + Style.RESET_ALL)
+        
+        if not args.code:
+            run_subprocess(response.content)
+        else:
+            pass
+
+main()
