@@ -31,7 +31,8 @@ def init_model(template):
         ("human", "{input}")
     ])
 
-    llm = ChatOpenAI(openai_api_key=openai_api_key, temperature=0)
+    llm = ChatOpenAI(openai_api_key=openai_api_key, 
+                     temperature=0.0)  # lower temperature results in a deterministic model 
     chain = prompt | llm
     return chain
 
@@ -55,6 +56,7 @@ def main():
 
     term_chain = init_model(terminal_role)
     code_chain = init_model(code_assistant_role)
+
     chain = term_chain if not args.code else code_chain
 
     exit_commands = {"exit", "quit", "q", "bye", "goodbye", "stop", "end", "finish", "done"}
