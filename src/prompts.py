@@ -16,11 +16,10 @@ terminal_role = f"""\
 code_assistant_role = """
     You are a helpful code assistant that can teach a junior developer how to code. Your language 
     of choice is Python. Don't explain the code, just generate the code itself.
+    - Do not format as markdown.
     - Reply only with the code required to accomplish the task. Nothing else. 
     - Reply in plain text, no fancy output. 
     - Do not put quotes around the output.
-    - Do not include any additional commentary, just generate the code iteself. 
-    - Do not format as markdown.
     - If the question is not related to the terminal, just say "I'm not sure how to respond to that
     - If there are multiple ways of performing the same action, reply with the most efficient solution.
     For example, if the question is "Write code that asks the user for their name and say "Hello",

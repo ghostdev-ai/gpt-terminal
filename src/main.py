@@ -1,4 +1,7 @@
 from langchain_openai import ChatOpenAI
+from langchain.chains import ConversationChain
+from langchain.memory import ConversationBufferMemory
+
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from prompts import terminal_role, code_assistant_role
 from dotenv import load_dotenv
@@ -10,6 +13,7 @@ import argparse
 load_dotenv()
 
 openai_api_key = os.getenv("OPENAI_API_KEY")
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -24,71 +28,46 @@ def init_model(template):
     # .format(input="What is the current directory?")
     # .format_messages(input="What is the current directory?")
     # .format_prompt(input="What is the current directory?")
+
     prompt = ChatPromptTemplate.from_messages([
         ("system", template),
         ("human", "{input}")
     ])
 
-    llm = ChatOpenAI(openai_api_key=openai_api_key)
-    chain = prompt | llm 
+    llm = ChatOpenAI(openai_api_key=openai_api_key, temperature=0)
+    chain = prompt | llm
     return chain
 
 
-args = parse_args()
+def run_subprocess(terminal_command):
+    # `shell=True` argument allows you to run the command in a shell
+    # `capture_output=True` captures the command's output
+    # `text=True` argument is used to return the output as a string    
+    result = subprocess.run(terminal_command, 
+                            shell=True, 
+                            capture_output=True, 
+                            text=True)
+    if result.returncode == 0:
+        print(result.stdout)
+    else:
+        print(Fore.RED + Style.BRIGHT + result.stderr + Style.RESET_ALL)
 
-prompt = None
-if args.file:
-    with open(args.file, 'r') as file:
-        prompt = file.read()
+
+args = parse_args()
 
 term_chain = init_model(terminal_role)
 code_chain = init_model(code_assistant_role)
 chain = term_chain if not args.code else code_chain
 
 exit_commands = {"exit", "quit", "q", "bye", "goodbye", "stop", "end", "finish", "done"}
-while (query := (input(Fore.GREEN + Style.BRIGHT + "> " + Style.RESET_ALL) if not prompt else prompt )) not in exit_commands:
-    response = chain.invoke({"input": query})
-    print(Fore.CYAN + Style.BRIGHT + response.content + Style.RESET_ALL)
-
+while (query := input(Fore.GREEN + Style.BRIGHT + "> " + Style.RESET_ALL)) not in exit_commands:
     # response = llm.invoke(messages)
     # response = llm.invoke({"input": "What is the current directory?"})
     # print(response.content)
+    response = chain.invoke({"input": query})
+    print(Fore.CYAN + Style.BRIGHT + response.content + Style.RESET_ALL)
     
-    # `shell=True` argument allows you to run the command in a shell
-    # `capture_output=True` captures the command's output
-    # `text=True` argument is used to return the output as a string    
-    # command = response.content
     if not args.code:
-        command = response.content
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-
-        if result.returncode == 0:
-            print(result.stdout)
-        else:
-            print(Fore.RED + Style.BRIGHT + result.stderr + Style.RESET_ALL)
-
-        # verbose:
-        #   Print the output of the command
-        #   print("Output:", result.stdout)
-        #   Print the error (if any)
-        #   print("Error:", result.stderr)
-        #   Print the return code
-        #   print("Return Code:", result.returncode)
-    
+        run_subprocess(response.content)
     else:
-        python_code = response.content
-
-        template = """
-        Generate a python file name that best illustrates the following code:
-        {code}
-        """
-        prompt = PromptTemplate.from_template(template).format(code=python_code)
-        
-        llm = ChatOpenAI(openai_api_key=openai_api_key)
-        response = llm.invoke(prompt)
-        
-        file_name = response.content
-        with open(file_name, "w") as file:
-            file.write(python_code)
-    
-    prompt = None
+        pass
