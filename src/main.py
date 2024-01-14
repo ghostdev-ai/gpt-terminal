@@ -2,13 +2,13 @@ from langchain_openai import ChatOpenAI
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
 from langchain_core.prompts import ChatPromptTemplate
-from prompts import terminal_role, code_assistant_role
+from prompts import terminal_assistant_role, python_assistant_role
 from dotenv import load_dotenv
 from colorama import Fore, Style
 import os
 import subprocess
 import argparse
-
+ 
 
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -17,14 +17,15 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--chat", action="store_true")
-    parser.add_argument("-f", "--file", type=str, default=None)
+    parser.add_argument("-f", "--file", nargs="+", action="append", help="Specify one or more text files for prompt chaining.")
     parser.add_argument("-s", "--shell", type=str, default=None)
     parser.add_argument("-py", "--python", action="store_true")
+    parser.add_argument("-swe", "--software_engineer", action="store_true")
     # parser.add_argument("-c", "--code", action="store_const", const=code_assistant_role, default=terminal_role)
     return parser.parse_args()
 
 
-def init_model(template):
+def init_role(template):
     # messages = prompt.format(input="What is the current directory?")
     # .format(input="What is the current directory?")
     # .format_messages(input="What is the current directory?")
@@ -39,6 +40,20 @@ def init_model(template):
                      temperature=0.0)  # lower temperature results in a deterministic model 
     chain = prompt | llm
     return chain
+
+
+def init_chat():
+    chat_chain = ConversationChain(
+        llm=ChatOpenAI(openai_api_key=openai_api_key, 
+                       model="gpt-3.5-turbo",
+                       temperature=0.0),
+        memory=ConversationBufferMemory()
+    )
+    return chat_chain
+
+
+def chain_prompts(prompts: list[str]):
+    pass
 
 
 def run_subprocess(terminal_command):
@@ -57,15 +72,15 @@ def run_subprocess(terminal_command):
 
 def main():
     args = parse_args()
+    
+    term_chain = init_role(terminal_assistant_role)
+    code_chain = init_role(python_assistant_role)
+    chat_chain = init_chat()
 
-    term_chain = init_model(terminal_role)
-    code_chain = init_model(code_assistant_role)
-    chat_chain = ConversationChain(
-        llm=ChatOpenAI(openai_api_key=openai_api_key, 
-                       model="gpt-3.5-turbo",
-                       temperature=0.0),
-        memory=ConversationBufferMemory()
-    )
+
+    if args.file:
+        chain_prompts(args.file[0])
+
 
     chain = term_chain
     if args.chat:

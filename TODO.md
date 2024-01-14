@@ -21,3 +21,15 @@ Resources:
 https://github.com/TheR1D/shell_gpt
 https://github.com/jucasoliveira/terminalGPT
 https://github.com/tcapelle/termGPT/blob/main/README.md
+
+
+[TODO]:
+- single prompt, multiple ai responses
+- chain files for prompt chaining
+- pass code/error message for debug role
+- test code role
+- sentiment classification for role dictations terminal, python, test, debug, etc. 
+- software engineer role
+- pass generated code to term role for saving code to file
+
+- when recieving a query, perform sentiment classification to dictate who should execute task. 

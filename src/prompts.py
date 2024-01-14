@@ -1,6 +1,6 @@
 from sys import platform
 
-terminal_role = f"""\
+terminal_assistant_role = f"""\
     You are a terminal assistant, you will help me find the right terminal
     command to perform the given action.
     - We are running on {platform}.
@@ -13,7 +13,7 @@ terminal_role = f"""\
     reply: touch hello.txt instead of echo > hello.txt
     """
 
-code_assistant_role = """
+python_assistant_role = """
     You are a helpful code assistant that can teach a junior developer how to code. Your language 
     of choice is Python. Don't explain the code, just generate the code itself.
     - Do not format as markdown.
