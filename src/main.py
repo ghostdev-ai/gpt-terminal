@@ -1,4 +1,6 @@
 from langchain_openai import ChatOpenAI
+from langchain.chains import ConversationChain
+from langchain.memory import ConversationBufferMemory
 from langchain_core.prompts import ChatPromptTemplate
 from prompts import terminal_role, code_assistant_role
 from dotenv import load_dotenv
@@ -14,8 +16,10 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--chat", action="store_true")
     parser.add_argument("-f", "--file", type=str, default=None)
-    parser.add_argument("-c", "--code", action="store_true")
+    parser.add_argument("-s", "--shell", type=str, default=None)
+    parser.add_argument("-py", "--python", action="store_true")
     # parser.add_argument("-c", "--code", action="store_const", const=code_assistant_role, default=terminal_role)
     return parser.parse_args()
 
@@ -56,18 +60,32 @@ def main():
 
     term_chain = init_model(terminal_role)
     code_chain = init_model(code_assistant_role)
+    chat_chain = ConversationChain(
+        llm=ChatOpenAI(openai_api_key=openai_api_key, 
+                       model="gpt-3.5-turbo",
+                       temperature=0.0),
+        memory=ConversationBufferMemory()
+    )
 
-    chain = term_chain if not args.code else code_chain
+    chain = term_chain
+    if args.chat:
+        chain = chat_chain
+    elif args.python:
+        chain = code_chain
 
     exit_commands = {"exit", "quit", "q", "bye", "goodbye", "stop", "end", "finish", "done"}
     while (query := input(Fore.GREEN + Style.BRIGHT + "> " + Style.RESET_ALL)) not in exit_commands:
         # response = llm.invoke(messages)
         # response = llm.invoke({"input": "What is the current directory?"})
         # print(response.content)
-        response = chain.invoke({"input": query})
-        print(Fore.CYAN + Style.BRIGHT + response.content + Style.RESET_ALL)
+        if args.chat:
+            conversation = chain.invoke({ "input": query })
+            print(Fore.CYAN + Style.BRIGHT + conversation["response"] + Style.RESET_ALL)
+        else:
+            response = chain.invoke({"input": query})
+            print(Fore.CYAN + Style.BRIGHT + response.content + Style.RESET_ALL)
         
-        if not args.code:
+        if not args.python and not args.chat:
             run_subprocess(response.content)
         else:
             pass
