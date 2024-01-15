@@ -1,13 +1,14 @@
 from langchain_openai import ChatOpenAI
-from langchain.chains import ConversationChain
+from langchain.chains import ConversationChain, LLMChain
 from langchain.memory import ConversationBufferMemory
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from prompts import terminal_assistant_role, python_assistant_role
 from dotenv import load_dotenv
 from colorama import Fore, Style
 import os
 import subprocess
 import argparse
+import sys
  
 
 load_dotenv()
@@ -17,7 +18,8 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--chat", action="store_true")
-    parser.add_argument("-f", "--file", nargs="+", action="append", help="Specify one or more text files for prompt chaining.")
+    parser.add_argument("-p", "--prompt", nargs=1)
+    parser.add_argument("-ch", "--chain", nargs="+", action="append", help="Specify one or more text files for prompt chaining.")
     parser.add_argument("-s", "--shell", type=str, default=None)
     parser.add_argument("-py", "--python", action="store_true")
     parser.add_argument("-swe", "--software_engineer", action="store_true")
@@ -56,6 +58,33 @@ def chain_prompts(prompts: list[str]):
     pass
 
 
+def preprocess_prompt(query: str) -> str:
+    template = """
+    Classify the prompt into terminal or code.
+    
+    Example 1:
+        Prompt: list the files in the current directory.
+        Sentiment: Terminal
+    Example 2:
+        Prompt: Ask for the user's name and say "Hello"
+        Sentiment: Code
+    
+    Prompt: {query}
+    Sentiment:
+    """
+    prompt_template = PromptTemplate(
+        input_variables=["query"],
+        template=template
+    )
+    prompt = prompt_template.format(query=query)
+
+    llm = ChatOpenAI(openai_api_key=openai_api_key, 
+                     model="gpt-3.5-turbo", 
+                     temperature=0.0)
+    response = llm.invoke(prompt)
+    return response.content
+
+
 def run_subprocess(terminal_command):
     # `shell=True` argument allows you to run the command in a shell
     # `capture_output=True` captures the command's output
@@ -90,9 +119,24 @@ def main():
 
     exit_commands = {"exit", "quit", "q", "bye", "goodbye", "stop", "end", "finish", "done"}
     while (query := input(Fore.GREEN + Style.BRIGHT + "> " + Style.RESET_ALL)) not in exit_commands:
+        """
+        sentiment = preprocess_prompt(query)
+
+        if sentiment == "Terminal":
+            response = term_chain.invoke({ "input": query })
+            print(Fore.CYAN + Style.BRIGHT + response.content + Style.RESET_ALL)
+            run_subprocess(response.content)
+        elif sentiment == "Code":
+            response = code_chain.invoke({"input": query})
+            print(Fore.CYAN + Style.BRIGHT + response.content + Style.RESET_ALL)
+        else:
+            pass
+        """
+        
         # response = llm.invoke(messages)
         # response = llm.invoke({"input": "What is the current directory?"})
         # print(response.content)
+
         if args.chat:
             conversation = chain.invoke({ "input": query })
             print(Fore.CYAN + Style.BRIGHT + conversation["response"] + Style.RESET_ALL)
@@ -104,5 +148,6 @@ def main():
             run_subprocess(response.content)
         else:
             pass
+
 
 main()
