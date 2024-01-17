@@ -24,6 +24,9 @@ def parse_args():
     parser.add_argument("-py", "--python", action="store_true")
     parser.add_argument("-swe", "--software_engineer", action="store_true")
     # parser.add_argument("-c", "--code", action="store_const", const=code_assistant_role, default=terminal_role)
+
+    parser.add_argument("--openai_api_key", type=str, default=None)
+    parser.add_argument("--model", type=str, default=None)
     return parser.parse_args()
 
 
@@ -40,8 +43,16 @@ def init_role(template):
 
     llm = ChatOpenAI(openai_api_key=openai_api_key, 
                      temperature=0.0)  # lower temperature results in a deterministic model 
-    chain = prompt | llm
+    memory = ConversationBufferMemory()
+    chain = LLMChain(
+        llm=llm,
+        prompt=prompt,
+        memory=memory
+    )
     return chain
+
+    # chain = prompt | llm
+    # return chain
 
 
 def init_chat():
@@ -103,22 +114,30 @@ def main():
     args = parse_args()
     
     term_chain = init_role(terminal_assistant_role)
-    code_chain = init_role(python_assistant_role)
-    chat_chain = init_chat()
+    # code_chain = init_role(python_assistant_role)
+    # chat_chain = init_chat()
 
 
-    if args.file:
-        chain_prompts(args.file[0])
+    # if args.file:
+    #     chain_prompts(args.file[0])
 
 
+    """
     chain = term_chain
     if args.chat:
         chain = chat_chain
     elif args.python:
         chain = code_chain
+    """
 
     exit_commands = {"exit", "quit", "q", "bye", "goodbye", "stop", "end", "finish", "done"}
     while (query := input(Fore.GREEN + Style.BRIGHT + "> " + Style.RESET_ALL)) not in exit_commands:
+
+        response = term_chain.invoke({ "input": query })
+        print(response)
+        print(Fore.CYAN + Style.BRIGHT + response["text"] + Style.RESET_ALL)
+        run_subprocess(response["text"])
+
         """
         sentiment = preprocess_prompt(query)
 
@@ -137,6 +156,7 @@ def main():
         # response = llm.invoke({"input": "What is the current directory?"})
         # print(response.content)
 
+        """
         if args.chat:
             conversation = chain.invoke({ "input": query })
             print(Fore.CYAN + Style.BRIGHT + conversation["response"] + Style.RESET_ALL)
@@ -148,6 +168,7 @@ def main():
             run_subprocess(response.content)
         else:
             pass
+        """
 
 
 main()
